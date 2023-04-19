@@ -18,10 +18,14 @@ public class DaoFactory {
     private String username;
     @Value("${db.password}")
     private String password;
-
     @Bean
     public UserDao userDao() {
-        return new UserDao(dataSource());
+        return new UserDao(jdbcContext());
+    }
+
+    @Bean
+    public JdbcContext jdbcContext() {
+        return new JdbcContext(dataSource());
     }
 
     @Bean

@@ -5,154 +5,53 @@ import java.sql.*;
 
 public class UserDao {
 
-    private final DataSource dataSource;
+    private final JdbcContext jdbcContext;
 
-    protected UserDao(DataSource dataSource) {
-        this.dataSource = dataSource;
+    protected UserDao(JdbcContext jdbcContext) {
+        this.jdbcContext = jdbcContext;
     }
 
     public User get(Long id) throws ClassNotFoundException, SQLException {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
-        User user = null;
-        try {
-            connection = dataSource.getConnection();
+        StatementStrategy statementStrategy = new GetStatementStrategy(id);
 
-            StatementStrategy statementStrategy = new GetStatementStrategy();
-            preparedStatement = statementStrategy.makeStatement(id, connection);
-//            preparedStatement = connection.prepareStatement("select id, name, password from userinfo where id = ?");
-//            preparedStatement.setLong(1, id);
-
-            resultSet = preparedStatement.executeQuery();
-
-            if(resultSet.next()) {
-                user = new User();
-                user.setId(resultSet.getLong("id"));
-                user.setName(resultSet.getString("name"));
-                user.setPassword(resultSet.getString("password"));
-            }
-
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return user;
+        return jdbcContext.jdbcContextForGet(statementStrategy);
     }
 
     public void insert(User user) throws SQLException {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
-        try {
-            connection = dataSource.getConnection();
-
-            StatementStrategy statementStrategy = new InsertStatementStrategy();
-            preparedStatement = statementStrategy.makeStatement(user, connection);
-//            preparedStatement = connection.prepareStatement("insert into userinfo (name, password) values (?,?)", Statement.RETURN_GENERATED_KEYS);
-//            preparedStatement.setString(1, user.getName());
-//            preparedStatement.setString(2, user.getPassword());
-            preparedStatement.executeUpdate();
-
-            resultSet = preparedStatement.getGeneratedKeys();
-            resultSet.next();
-
-            user.setId(resultSet.getLong(1));
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        StatementStrategy statementStrategy = new InsertStatementStrategy(user);
+        jdbcContext.jdbcContextForInsert(user, statementStrategy);
     }
 
+    //    }
+//        jdbcContext.jdbcContextForUpdate(statementStrategy);
+//    private void jdbcContextForUpdate(StatementStrategy statementStrategy) throws SQLException {
+//
+//    }
+//        jdbcContext.jdbcContextForInsert(user, statementStrategy);
+//    private void jdbcContextForInsert(User user, StatementStrategy statementStrategy) throws SQLException {
+//    private User jdbcContextForGet(StatementStrategy statementStrategy) throws SQLException {
+//        return jdbcContext.jdbcContextForGet(statementStrategy);
+//    }
     public void update(User user) throws SQLException {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-        try {
-            connection = dataSource.getConnection();
-
-
-            StatementStrategy statementStrategy = new UpdateStatementStrategy();
-            preparedStatement = statementStrategy.makeStatement(user, connection);
-//            preparedStatement = connection.prepareStatement("update userinfo set name = ?, password = ? where id = ?");
-//            preparedStatement.setString(1, user.getName());
-//            preparedStatement.setString(2, user.getPassword());
-//            preparedStatement.setLong(3, user.getId());
-            preparedStatement.executeUpdate();
-
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        StatementStrategy statementStrategy = new UpdateStatementStrategy(user);
+        jdbcContext.jdbcContextForUpdate(statementStrategy);
     }
+
 
     public void delete(Long id) throws SQLException {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-        try {
-            connection = dataSource.getConnection();
-
-            StatementStrategy statementStrategy = new DeleteStatementStrategy();
-            preparedStatement = statementStrategy.makeStatement(id, connection);
-            preparedStatement.executeUpdate();
-
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        StatementStrategy statementStrategy = new DeleteStatementStrategy(id);
+        jdbcContext.jdbcContextForUpdate(statementStrategy);
     }
 
-    public PreparedStatement makeStatement(Long id, Connection connection) throws SQLException {
-        PreparedStatement preparedStatement;
-        preparedStatement = connection.prepareStatement("delete from userinfo where id = ?");
-        preparedStatement.setLong(1, id);
-        return preparedStatement;
-    }
+}
+//    public PreparedStatement makeStatement(Long id, Connection connection) throws SQLException {
+//        PreparedStatement preparedStatement;
+//        preparedStatement = connection.prepareStatement("delete from userinfo where id = ?");
+//        preparedStatement.setLong(1, id);
+//        return preparedStatement;
+//    }
 
 //    public Connection getConnection() throws ClassNotFoundException, SQLException {
 //
 //        return connectionMaker.getConnection();
 //    }
-}
