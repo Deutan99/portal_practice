@@ -12,46 +12,47 @@ public class UserDao {
     }
 
     public User get(Long id) throws ClassNotFoundException, SQLException {
-        StatementStrategy statementStrategy = new GetStatementStrategy(id);
-
+        StatementStrategy statementStrategy = connection -> {
+            PreparedStatement preparedStatement;
+            preparedStatement = connection.prepareStatement("select id, name, password from userinfo where id = ?");
+            preparedStatement.setLong(1, id);
+            return preparedStatement;
+        };
         return jdbcContext.jdbcContextForGet(statementStrategy);
     }
 
     public void insert(User user) throws SQLException {
-        StatementStrategy statementStrategy = new InsertStatementStrategy(user);
+        StatementStrategy statementStrategy = connection -> {
+            PreparedStatement preparedStatement;
+            preparedStatement = connection.prepareStatement("insert into userinfo (name, password) values (?,?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(2, user.getPassword());
+            return preparedStatement;
+        };
         jdbcContext.jdbcContextForInsert(user, statementStrategy);
     }
-
-    //    }
-//        jdbcContext.jdbcContextForUpdate(statementStrategy);
-//    private void jdbcContextForUpdate(StatementStrategy statementStrategy) throws SQLException {
-//
-//    }
-//        jdbcContext.jdbcContextForInsert(user, statementStrategy);
-//    private void jdbcContextForInsert(User user, StatementStrategy statementStrategy) throws SQLException {
-//    private User jdbcContextForGet(StatementStrategy statementStrategy) throws SQLException {
-//        return jdbcContext.jdbcContextForGet(statementStrategy);
-//    }
     public void update(User user) throws SQLException {
-        StatementStrategy statementStrategy = new UpdateStatementStrategy(user);
+        StatementStrategy statementStrategy = connection -> {
+            PreparedStatement preparedStatement;
+            preparedStatement = connection.prepareStatement("update userinfo set name = ?, password = ? where id = ?");
+            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setLong(3, user.getId());
+            return preparedStatement;
+        };
         jdbcContext.jdbcContextForUpdate(statementStrategy);
     }
 
 
     public void delete(Long id) throws SQLException {
-        StatementStrategy statementStrategy = new DeleteStatementStrategy(id);
+        StatementStrategy statementStrategy = connection -> {
+            PreparedStatement preparedStatement;
+            preparedStatement = connection.prepareStatement("delete from userinfo where id = ?");
+            preparedStatement.setLong(1, id);
+            return preparedStatement;
+        };
         jdbcContext.jdbcContextForUpdate(statementStrategy);
     }
 
 }
-//    public PreparedStatement makeStatement(Long id, Connection connection) throws SQLException {
-//        PreparedStatement preparedStatement;
-//        preparedStatement = connection.prepareStatement("delete from userinfo where id = ?");
-//        preparedStatement.setLong(1, id);
-//        return preparedStatement;
-//    }
 
-//    public Connection getConnection() throws ClassNotFoundException, SQLException {
-//
-//        return connectionMaker.getConnection();
-//    }
